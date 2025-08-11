@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Outfit, Ovo } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "./context/LanguageContext";
+import { cookies } from "next/headers";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -25,25 +26,10 @@ export default function RootLayout({
 }: {
   children: ReactNode;
 }) {
-  // Get initial language from cookies on server
-  let initialLanguage = 'en';
-  
-  // Only attempt to access cookies in server environment
-  if (typeof window === 'undefined') {
-    try {
-      // Import cookies only in server context
-      const { cookies } = require("next/headers");
-      const cookieStore = cookies();
-      const langCookie = cookieStore.get('oda-roba-language');
-      if (langCookie) {
-        initialLanguage = langCookie.value;
-      }
-    } catch (e) {
-      console.log("Cookie access error:", e);
-      // Fallback to default language
-      initialLanguage = 'en';
-    }
-  }
+  // Server-side cookie access
+  const cookieStore = cookies();
+  const langCookie = cookieStore.get('oda-roba-language')?.value;
+  const initialLanguage = langCookie || 'en';
 
   return (
     <html lang={initialLanguage} className="scroll-smooth" suppressHydrationWarning>
@@ -58,10 +44,23 @@ export default function RootLayout({
         className={`${outfit.className} ${ovo.className} antialiased leading-8 overflow-x-hidden dark:bg-darkTheme dark:text-white`}
         suppressHydrationWarning
       >
-        <LanguageProvider initialLanguage={initialLanguage}>
+        {/* Client-side component wrapper */}
+        <ClientLanguageProvider initialLanguage={initialLanguage}>
           {children}
-        </LanguageProvider>
+        </ClientLanguageProvider>
       </body>
     </html>
+  );
+}
+
+// Client-side component
+function ClientLanguageProvider({ children, initialLanguage }: {
+  children: ReactNode;
+  initialLanguage: string;
+}) {
+  return (
+    <LanguageProvider initialLanguage={initialLanguage}>
+      {children}
+    </LanguageProvider>
   );
 }

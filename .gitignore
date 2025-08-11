@@ -1,0 +1,15 @@
+# dependencies
+node_modules
+
+# build output
+.next
+
+# static exports (optional)
+out
+
+# environment variables
+.env
+
+# OS or editor junk files
+.DS_Store
+*.log
